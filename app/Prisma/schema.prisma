@@ -1,0 +1,18 @@
+generator client{
+    provider = "Prisma-client-py"
+    recursive_type_depth = 5
+}
+
+datasource db {
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+model Users{
+    id Int @id @default(autoincrement())
+    name String @map("name") @db.VarChar(100)
+    email String @map("email") @db.VarChar(100)
+    password String @map("password") @db.VarChar(100)
+
+    @@map("users")
+}
