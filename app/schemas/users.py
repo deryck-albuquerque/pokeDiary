@@ -1,8 +1,8 @@
+from typing import Generic, Optional, TypeVar
 from pydantic import BaseModel
-from typing import Optional, TypeVar
 
-T= TypeVar('T')
+T = TypeVar("T")
 
-class ResponseUsersSchema(BaseModel):
+class ResponseUsersSchema(BaseModel, Generic[T]):
     detail: str
     result: Optional[T] = None

@@ -1,24 +1,64 @@
-from app.model.users import CreateUser
-from app.repository.users import UsersRepository
+from prisma import Prisma
+from app.model.users import CreateUser, UpdateUser, UserResponse
+from app.repository.users import UsersRepository, UsersUpdateInput
+import bcrypt
+
 
 class UsersService:
 
     @staticmethod
-    async def get_all_users():
-        return await UsersRepository.get_all_users()
+    async def get_all_users(prisma: Prisma) -> dict:
+        """
+        Return all registered users in database.
+        :param prisma:
+        :return: dict
+        """
+        return await UsersRepository.get_all_users(prisma)
 
     @staticmethod
-    async def get_user_by_id(user_id: int):
-        return await UsersRepository.get_user_by_id(user_id)
+    async def get_user_by_id(prisma: Prisma, user_id: int) -> dict:
+        """
+        Return a specific user in database by id.
+        :param prisma:
+        :param user_id:
+        :return: dict
+        """
+        return await UsersRepository.get_user_by_id(prisma, user_id)
 
     @staticmethod
-    async def create_user(data: CreateUser):
-        return await UsersRepository.create_user(data)
+    async def create_user(prisma: Prisma, data: CreateUser) -> dict:
+        """
+        Creates user in database with name, email and password.
+        :param prisma:
+        :param data:
+        :return: dict
+        """
+        hashed_password = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
+
+        payload = data.model_dump()
+        payload["password"] = hashed_password
+
+        return await UsersRepository.create_user(prisma, payload)
 
     @staticmethod
-    async def update_user(user_id: int, data: CreateUser):
-        return await UsersRepository.update_user(user_id, data)
+    async def update_user(prisma: Prisma, user_id: int, data: UpdateUser) -> dict:
+        """
+        Updates a specific user by id.
+        :param prisma:
+        :param user_id:
+        :param data:
+        :return: dict
+        """
+        payload: UsersUpdateInput = data.model_dump(exclude_unset=True)
+
+        return await UsersRepository.update_user(prisma, user_id, payload)
 
     @staticmethod
-    async def delete_user(user_id: int):
-        return await UsersRepository.delete_user(user_id)
+    async def delete_user(prisma: Prisma, user_id: int) -> dict:
+        """
+        Deletes a specific user by id.
+        :param prisma:
+        :param user_id:
+        :return: dict
+        """
+        return await UsersRepository.delete_user(prisma, user_id)

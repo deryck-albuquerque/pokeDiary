@@ -1,32 +1,34 @@
-from app.model.users import CreateUser
-from app.config.connection_db import prisma_connection
+from prisma import Prisma
+from prisma.types import UsersCreateInput
+from prisma.types import UsersUpdateInput
 
 class UsersRepository:
 
     @staticmethod
-    async def get_all_users():
-        return await prisma_connection.prisma.users.find_many()
+    async def get_all_users(prisma: Prisma):
+        return await prisma.users.find_many()
 
     @staticmethod
-    async def get_user_by_id(user_id: int):
-        return await prisma_connection.prisma.users.find_first(where={"id": user_id})
+    async def get_user_by_id(prisma: Prisma, user_id: int):
+        return await prisma.users.find_unique(
+            where={"id": user_id}
+        )
 
     @staticmethod
-    async def create_user(user: CreateUser):
-        return await prisma_connection.prisma.users.create({
-            "name": user.name,
-            "email": user.email,
-            "password": user.password
-        })
+    async def create_user(prisma: Prisma, data: UsersCreateInput):
+        return await prisma.users.create(
+            data=data
+        )
 
     @staticmethod
-    async def update_user(user_id: int, user: CreateUser):
-        await prisma_connection.prisma.users.update(where={"id": user_id}, data={
-            "name": user.name,
-            "email": user.email,
-            "password": user.password
-        })
+    async def update_user(prisma: Prisma, user_id: int, data: UsersUpdateInput):
+        return await prisma.users.update(
+            where={"id": user_id},
+            data=data
+        )
 
     @staticmethod
-    async def delete_user(user_id: int):
-        await prisma_connection.prisma.users.delete(user_id)
+    async def delete_user(prisma: Prisma, user_id: int):
+        return await prisma.users.delete(
+            where={"id": user_id}
+        )
