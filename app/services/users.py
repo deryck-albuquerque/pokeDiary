@@ -10,7 +10,7 @@ class UsersService:
     async def get_all_users(prisma: Prisma) -> dict:
         """
         Return all registered users in database.
-        :param prisma:
+        :param prisma: db connection
         :return: dict
         """
         return await UsersRepository.get_all_users(prisma)
@@ -19,8 +19,8 @@ class UsersService:
     async def get_user_by_id(prisma: Prisma, user_id: int) -> dict:
         """
         Return a specific user in database by id.
-        :param prisma:
-        :param user_id:
+        :param prisma: db connection
+        :param user_id: int
         :return: dict
         """
         return await UsersRepository.get_user_by_id(prisma, user_id)
@@ -29,8 +29,8 @@ class UsersService:
     async def create_user(prisma: Prisma, data: CreateUser) -> dict:
         """
         Creates user in database with name, email and password.
-        :param prisma:
-        :param data:
+        :param prisma: db connection
+        :param data: payload
         :return: dict
         """
         hashed_password = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
@@ -44,9 +44,9 @@ class UsersService:
     async def update_user(prisma: Prisma, user_id: int, data: UpdateUser) -> dict:
         """
         Updates a specific user by id.
-        :param prisma:
-        :param user_id:
-        :param data:
+        :param prisma: db connection
+        :param user_id: int
+        :param data: payload
         :return: dict
         """
         payload: UsersUpdateInput = data.model_dump(exclude_unset=True)
@@ -57,8 +57,8 @@ class UsersService:
     async def delete_user(prisma: Prisma, user_id: int) -> dict:
         """
         Deletes a specific user by id.
-        :param prisma:
-        :param user_id:
+        :param prisma: db connection
+        :param user_id: int
         :return: dict
         """
         return await UsersRepository.delete_user(prisma, user_id)
