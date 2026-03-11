@@ -9,8 +9,9 @@ def init_app() -> FastAPI:
         version="initial"
     )
 
-    from app.controller import users
+    from app.controller import users, auth
     app.include_router(users.router)
+    app.include_router(auth.router)
 
     return app
 

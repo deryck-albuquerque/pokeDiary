@@ -13,7 +13,7 @@ class UsersService:
         :param prisma: db connection
         :return: dict
         """
-        return await UsersRepository.get_all_users(prisma)
+        return await UsersRepository.get_all(prisma)
 
     @staticmethod
     async def get_user_by_id(prisma: Prisma, user_id: int) -> dict:
@@ -23,7 +23,7 @@ class UsersService:
         :param user_id: int
         :return: dict
         """
-        return await UsersRepository.get_user_by_id(prisma, user_id)
+        return await UsersRepository.get_by_id(prisma, user_id)
 
     @staticmethod
     async def create_user(prisma: Prisma, data: CreateUser) -> dict:
@@ -38,7 +38,7 @@ class UsersService:
         payload = data.model_dump()
         payload["password"] = hashed_password
 
-        return await UsersRepository.create_user(prisma, payload)
+        return await UsersRepository.create(prisma, payload)
 
     @staticmethod
     async def update_user(prisma: Prisma, user_id: int, data: UpdateUser) -> dict:
@@ -51,7 +51,7 @@ class UsersService:
         """
         payload: UsersUpdateInput = data.model_dump(exclude_unset=True)
 
-        return await UsersRepository.update_user(prisma, user_id, payload)
+        return await UsersRepository.update(prisma, user_id, payload)
 
     @staticmethod
     async def delete_user(prisma: Prisma, user_id: int) -> dict:
@@ -61,4 +61,4 @@ class UsersService:
         :param user_id: int
         :return: dict
         """
-        return await UsersRepository.delete_user(prisma, user_id)
+        return await UsersRepository.delete(prisma, user_id)
