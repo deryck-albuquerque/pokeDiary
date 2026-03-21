@@ -51,6 +51,10 @@ class UsersService:
         """
         payload: UsersUpdateInput = data.model_dump(exclude_unset=True)
 
+        if data.password:
+            hashed_password = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
+            payload["password"] = hashed_password
+
         return await UsersRepository.update(prisma, user_id, payload)
 
     @staticmethod
