@@ -8,12 +8,11 @@ from app.model.users import CreateUser, UpdateUser, UserResponse
 from app.schemas.users import ResponseUsersSchema
 from app.services.users import UsersService
 from app.core.roles import Role
-
+from app.messaging.users import publish_user_created, publish_user_updated, publish_user_deleted
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
-    dependencies=[Depends(get_current_user)]
+    tags=["users"]
 )
 
 
@@ -58,6 +57,9 @@ async def create_user(data: CreateUser, prisma: Prisma = Depends(get_prisma)):
     """
     created_user = await UsersService.create_user(prisma, data)
 
+    # messaging rabbitMQ
+    await publish_user_created(created_user.name, created_user.email, created_user.role, created_user.id)
+
     return ResponseUsersSchema(
         detail="User created successfully",
         result=UserResponse.model_validate(created_user)
@@ -79,6 +81,11 @@ async def update_user(user_id: int, update_form: UpdateUser, prisma: Prisma = De
 
     updated_user = await UsersService.update_user(prisma, user_id, update_form)
 
+    updated_fields = update_form.model_dump(exclude_unset=True)
+
+    # messaging rabbitMQ
+    await publish_user_updated(user_id, updated_fields)
+
     return ResponseUsersSchema(
         detail="User updated successfully",
         result=UserResponse.model_validate(updated_user)
@@ -91,6 +98,10 @@ async def delete_user(user_id: int, prisma: Prisma = Depends(get_prisma),
     """
     Admin only: delete user.
     """
+    user = await UsersService.get_user_by_id(prisma, user_id)
+
+    await publish_user_deleted(user.name, user.email, user.role, user.id)
+
     await UsersService.delete_user(prisma, user_id)
 
     return ResponseUsersSchema(detail="User deleted successfully")

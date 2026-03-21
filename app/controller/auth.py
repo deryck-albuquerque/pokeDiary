@@ -6,6 +6,7 @@ from app.config.connection_db import get_prisma
 from app.config.security import create_access_token
 from app.model.users import LoginUser
 from app.repository.users import UsersRepository
+from app.messaging.auth import publish_user_login
 
 router = APIRouter(
     prefix="/auth",
@@ -33,6 +34,8 @@ async def login(data: LoginUser, prisma: Prisma = Depends(get_prisma)):
             status_code=401,
             detail="Invalid credentials"
         )
+
+    await publish_user_login(user.id, user.email)
 
     access_token = create_access_token(
         data={
