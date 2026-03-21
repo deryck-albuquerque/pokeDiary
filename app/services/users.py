@@ -1,5 +1,6 @@
+from fastapi import HTTPException, status
 from prisma import Prisma
-from app.model.users import CreateUser, UpdateUser, UserResponse
+from app.model.users import CreateUser, UpdateUser
 from app.repository.users import UsersRepository, UsersUpdateInput
 import bcrypt
 
@@ -33,6 +34,26 @@ class UsersService:
         :param data: payload
         :return: dict
         """
+        existing_email = await prisma.users.find_unique(
+            where={"email": data.email}
+        )
+
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered!"
+            )
+
+        existing_name = await prisma.users.find_first(
+            where={"name": data.name}
+        )
+
+        if existing_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already in use!"
+            )
+
         hashed_password = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
 
         payload = data.model_dump()
