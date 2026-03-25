@@ -15,7 +15,7 @@ async def publish_user_login(user_id: int, email: str):
     queue = await channel.declare_queue("user.logged_in", durable=True)
 
     payload = json.dumps({
-        "event": "user.login",
+        "event": "user.logged_in",
         "version": "v1",
         "timestamp": datetime.now(UTC).isoformat(),
         "data": {
