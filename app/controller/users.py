@@ -5,7 +5,7 @@ from typing import List
 from app.config.connection_db import get_prisma
 from app.dependencies.auth import get_current_user, require_role
 from app.model.users import CreateUser, UpdateUser, UserResponse
-from app.schemas.users import ResponseUsersSchema
+from app.schemas.generic import ResponseSchema
 from app.services.users import UsersService
 from app.core.roles import Role
 from app.messaging.users import publish_user_created, publish_user_updated, publish_user_deleted
@@ -16,20 +16,20 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=ResponseUsersSchema[List[UserResponse]])
+@router.get("", response_model=ResponseSchema[List[UserResponse]])
 async def get_all_users(prisma: Prisma = Depends(get_prisma), current_user=Depends(require_role(Role.ADMIN))):
     """
     Admin only: return all users.
     """
     users = await UsersService.get_all_users(prisma)
 
-    return ResponseUsersSchema[List[UserResponse]](
+    return ResponseSchema[List[UserResponse]](
         detail="Successfully fetched users",
         result=[UserResponse.model_validate(u) for u in users]
     )
 
 
-@router.get("/{user_id}", response_model=ResponseUsersSchema)
+@router.get("/{user_id}", response_model=ResponseSchema)
 async def get_user_by_id(user_id: int, prisma: Prisma = Depends(get_prisma),
                          current_user: dict = Depends(get_current_user)):
     """
@@ -44,13 +44,13 @@ async def get_user_by_id(user_id: int, prisma: Prisma = Depends(get_prisma),
 
     user = await UsersService.get_user_by_id(prisma, user_id)
 
-    return ResponseUsersSchema(
+    return ResponseSchema(
         detail="Successfully fetched user",
         result=UserResponse.model_validate(user)
     )
 
 
-@router.post("", response_model=ResponseUsersSchema)
+@router.post("", response_model=ResponseSchema)
 async def create_user(data: CreateUser, prisma: Prisma = Depends(get_prisma)):
     """
     Public route: create a new user.
@@ -60,13 +60,13 @@ async def create_user(data: CreateUser, prisma: Prisma = Depends(get_prisma)):
     # messaging rabbitMQ
     await publish_user_created(created_user.name, created_user.email, created_user.role, created_user.id)
 
-    return ResponseUsersSchema(
+    return ResponseSchema(
         detail="User created successfully",
         result=UserResponse.model_validate(created_user)
     )
 
 
-@router.patch("/{user_id}", response_model=ResponseUsersSchema)
+@router.patch("/{user_id}", response_model=ResponseSchema)
 async def update_user(user_id: int, update_form: UpdateUser, prisma: Prisma = Depends(get_prisma),
                       current_user: dict = Depends(get_current_user)):
     """
@@ -86,13 +86,13 @@ async def update_user(user_id: int, update_form: UpdateUser, prisma: Prisma = De
     # messaging rabbitMQ
     await publish_user_updated(user_id, updated_fields)
 
-    return ResponseUsersSchema(
+    return ResponseSchema(
         detail="User updated successfully",
         result=UserResponse.model_validate(updated_user)
     )
 
 
-@router.delete("/{user_id}", response_model=ResponseUsersSchema)
+@router.delete("/{user_id}", response_model=ResponseSchema)
 async def delete_user(user_id: int, prisma: Prisma = Depends(get_prisma),
                       current_user=Depends(require_role(Role.ADMIN))):
     """
@@ -104,4 +104,4 @@ async def delete_user(user_id: int, prisma: Prisma = Depends(get_prisma),
 
     await UsersService.delete_user(prisma, user_id)
 
-    return ResponseUsersSchema(detail="User deleted successfully")
+    return ResponseSchema(detail="User deleted successfully")

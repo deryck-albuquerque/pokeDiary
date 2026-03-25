@@ -8,9 +8,10 @@ def init_app() -> FastAPI:
         version="initial"
     )
 
-    from app.controller import users, auth
+    from app.controller import users, auth, pokemon
     app.include_router(users.router)
     app.include_router(auth.router)
+    app.include_router(pokemon.router)
 
     return app
 

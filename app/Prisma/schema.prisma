@@ -16,5 +16,21 @@ model Users{
     role      String   @default("user")
     createdAt DateTime @default(now())
 
+    diaries  PokemonDiary[]
+
     @@map("users")
+}
+
+model PokemonDiary {
+  id          Int    @id @default(autoincrement())
+  user_id     Int
+  pokemon_name String
+  notes       Json?
+
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user Users @relation(fields: [user_id], references: [id])
+
+  @@map("pokemon_diary")
 }
