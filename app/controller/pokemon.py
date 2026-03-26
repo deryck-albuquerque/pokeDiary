@@ -8,6 +8,8 @@ from app.model.pokemon import CreatePokemonDiary, UpdatePokemonDiary, PokemonDia
 from app.schemas.generic import ResponseSchema
 from app.services.pokemon import PokemonService
 from app.services.pokemon_api import PokemonAPIService
+from app.messaging.pokemon import publish_diary_created, publish_diary_updated, publish_diary_deleted
+from app.services.users import UsersService
 
 
 router = APIRouter(
@@ -23,7 +25,11 @@ async def create_diary(data: CreatePokemonDiary, prisma: Prisma = Depends(get_pr
     """
     Create a new Pokemon diary entry for the logged user.
     """
+    user = await UsersService.get_user_by_id(prisma, current_user["id"])
+
     diary = await PokemonService.create_diary(prisma, current_user["id"], data)
+
+    await publish_diary_created(current_user["id"], user.name)
 
     return ResponseSchema(
         detail="Pokemon diary created successfully",
@@ -51,7 +57,7 @@ async def get_user_diary(prisma: Prisma = Depends(get_prisma), current_user=Depe
 
 
 @router.patch("/diary/{diary_id}", response_model=ResponseSchema)
-async def update_diary(diary_id: int, data: UpdatePokemonDiary, prisma: Prisma = Depends(get_prisma),
+async def update_diary(diary_id: int, update_form: UpdatePokemonDiary, prisma: Prisma = Depends(get_prisma),
                        current_user=Depends(get_current_user)):
     """
     Update a Pokemon diary entry.
@@ -71,11 +77,15 @@ async def update_diary(diary_id: int, data: UpdatePokemonDiary, prisma: Prisma =
             detail="Not enough permissions"
         )
 
-    updated = await PokemonService.update_diary(prisma, diary_id, data)
+    updated_diary = await PokemonService.update_diary(prisma, diary_id, update_form)
+
+    updated_fields = update_form.model_dump(exclude_unset=True)
+
+    await publish_diary_updated(current_user["id"], updated_fields)
 
     return ResponseSchema(
         detail="Pokemon diary updated successfully",
-        result=PokemonDiaryResponse.model_validate(updated)
+        result=PokemonDiaryResponse.model_validate(updated_diary)
     )
 
 
@@ -101,6 +111,8 @@ async def delete_diary(diary_id: int, prisma: Prisma = Depends(get_prisma), curr
             status_code=403,
             detail="Not enough permissions"
         )
+
+    await publish_diary_deleted(current_user["id"], diary_id)
 
     await PokemonService.delete_diary(prisma, diary_id)
 
