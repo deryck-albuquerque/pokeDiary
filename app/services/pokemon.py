@@ -53,9 +53,14 @@ class PokemonService:
         :return: dict
         """
         payload = {
-            "pokemon_name": data.pokemon_name if data.notes else None,
+            "pokemon_name": data.pokemon_name if data.pokemon_name else None,
             "notes": json.dumps(data.notes) if data.notes else None
         }
+
+        if payload["pokemon_name"] is None:
+            payload.pop("pokemon_name")
+        if payload["notes"] is None:
+            payload.pop("notes")
 
         return await PokemonRepository.update(prisma, diary_id, payload)
 
