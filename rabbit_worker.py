@@ -2,7 +2,7 @@ import asyncio
 import logging
 from app.messaging.users import consume_user_created, consume_user_updated, consume_user_deleted
 from app.messaging.auth import consume_user_login
-from app.messaging.pokemon import consume_diary_created, consume_diary_updated, consume_diary_deleted
+from app.messaging.diary import consume_diary_created, consume_diary_updated, consume_diary_deleted
 
 logging.basicConfig(
     level=logging.INFO,

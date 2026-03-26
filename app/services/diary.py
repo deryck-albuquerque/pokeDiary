@@ -1,7 +1,7 @@
 import json
 from fastapi import HTTPException
-from app.model.pokemon import CreatePokemonDiary, UpdatePokemonDiary
-from app.repository.pokemon import *
+from app.model.diary import CreatePokemonDiary, UpdatePokemonDiary
+from app.repository.diary import *
 
 class PokemonService:
 

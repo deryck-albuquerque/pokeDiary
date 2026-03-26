@@ -4,11 +4,11 @@ from typing import List
 
 from app.config.connection_db import get_prisma
 from app.dependencies.auth import get_current_user
-from app.model.pokemon import CreatePokemonDiary, UpdatePokemonDiary, PokemonDiaryResponse
+from app.model.diary import CreatePokemonDiary, UpdatePokemonDiary, PokemonDiaryResponse
 from app.schemas.generic import ResponseSchema
-from app.services.pokemon import PokemonService
+from app.services.diary import PokemonService
 from app.services.pokemon_api import PokemonAPIService
-from app.messaging.pokemon import publish_diary_created, publish_diary_updated, publish_diary_deleted
+from app.messaging.diary import publish_diary_created, publish_diary_updated, publish_diary_deleted
 from app.services.users import UsersService
 
 
