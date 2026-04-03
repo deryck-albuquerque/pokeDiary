@@ -11,7 +11,7 @@ def init_app() -> FastAPI:
     from app.controller import users, auth, diary
     app.include_router(users.router)
     app.include_router(auth.router)
-    app.include_router(pokemon.router)
+    app.include_router(diary.router)
 
     return app
 
