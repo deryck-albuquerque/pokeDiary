@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from mangum import Mangum
 
 def init_app() -> FastAPI:
     app = FastAPI(
@@ -16,6 +17,7 @@ def init_app() -> FastAPI:
     return app
 
 app = init_app()
+handler = Mangum(app)
 
 if __name__ == '__main__':
     uvicorn.run("main:app", host="localhost", port=8888, reload=True)
