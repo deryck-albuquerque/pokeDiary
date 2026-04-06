@@ -1,41 +1,41 @@
-# 🐾 pokeDiary
+# pokeDiary
 
 API desenvolvida com **FastAPI** para criação de um diário de Pokémons, consumindo dados da [PokéAPI](https://pokeapi.co) e permitindo que usuários registrem, organizem e gerenciem suas experiências com diferentes Pokémons.
 
 ---
 
-## 📌 Sobre o Projeto
+## Sobre o Projeto
 
 O **pokeDiary** é um projeto de estudo focado em boas práticas de desenvolvimento backend, arquitetura de APIs e integração com serviços externos.
 
 A aplicação permite que usuários:
 
-* Criem e gerenciem suas contas
-* Registrem Pokémons em um diário personalizado
-* Consultem informações detalhadas consumidas da PokéAPI
-* Atualizem e removam registros do diário
+- Criem e gerenciem suas contas  
+- Registrem Pokémons em um diário personalizado  
+- Consultem informações detalhadas consumidas da PokéAPI  
+- Atualizem e removam registros do diário  
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
-* **Python**
-* **FastAPI**
-* **PostgreSQL**
-* **Prisma ORM**
-* **RabbitMQ** (processamento assíncrono)
-* **Docker Compose** (infraestrutura local)
+- Python  
+- FastAPI  
+- PostgreSQL  
+- Prisma ORM  
+- RabbitMQ (processamento assíncrono)  
+- Docker e Docker Compose  
 
 ---
 
-## 🧱 Arquitetura do Projeto
+## Arquitetura do Projeto
 
-O projeto segue uma arquitetura em camadas bem definida, baseada em princípios de **Clean Architecture**, garantindo separação de responsabilidades, baixo acoplamento e alta manutenibilidade.
+O projeto segue uma arquitetura em camadas baseada em princípios de **Clean Architecture**, garantindo separação de responsabilidades, baixo acoplamento e facilidade de manutenção.
 
-```bash id="nrmjhp"
+```bash
 pokeDiary/
 │
-├── controllers/     # Rotas da API (camada de entrada)
+├── controller/     # Rotas da API (camada de entrada)
 ├── core/            # Definições centrais (ex: roles de usuário)
 ├── dependencies/    # Injeções de dependência (auth, etc)
 │
@@ -43,9 +43,9 @@ pokeDiary/
 │   ├── connection_db.py  # Conexão com banco de dados
 │   └── security.py       # Configuração de autenticação e segurança
 │
-├── models/          # Modelos de domínio (User, Diary)
-├── prisma/          # Schema e client Prisma
-├── repositories/    # Acesso aos dados (camada de persistência)
+├── model/          # Modelos de domínio (User, Diary)
+├── Prisma/          # Schema e client Prisma
+├── repository/    # Acesso aos dados (camada de persistência)
 ├── services/        # Regras de negócio
 ├── schemas/         # Schemas (validação e resposta)
 │
@@ -54,78 +54,104 @@ pokeDiary/
 └── requirements.txt
 ```
 
-### 🔍 Organização
+### Organização
 
-* **Controllers**: responsáveis por expor os endpoints da API
-* **Services**: contêm a lógica de negócio
-* **Repositories**: fazem a comunicação com o banco de dados
-* **Config**: centraliza conexões e segurança (DB + autenticação)
-* **Core**: definições centrais como papéis de usuário (RBAC)
-* **Dependencies**: gerenciamento de autenticação e injeções
-
----
-
-## 🔐 Autenticação e Autorização
-
-* Sistema de autenticação baseado em token
-* Controle de acesso utilizando **RBAC (Role-Based Access Control)**
+- **Controller**: camada de entrada (endpoints)  
+- **Services**: regras de negócio  
+- **Repository**: acesso a dados  
+- **Config**: banco e segurança  
+- **Core**: definições centrais (RBAC)  
+- **Dependencies**: injeção de dependências  
 
 ---
 
-## ⚙️ Mensageria (RabbitMQ)
+## Autenticação e Autorização
 
-O projeto utiliza **RabbitMQ** para processamento assíncrono nas operações:
-
-* CRUD de usuários
-* Criação de diário
-* Atualização de diário
-* Exclusão de diário
+- Autenticação baseada em **JWT (JSON Web Token)**  
+- Controle de acesso utilizando RBAC (Role-Based Access Control)  
 
 ---
 
-## 🐳 Infraestrutura com Docker
+## Mensageria
 
-O projeto utiliza **Docker Compose** exclusivamente para provisionar os serviços de infraestrutura necessários ao funcionamento da aplicação:
+O projeto utiliza RabbitMQ para processamento assíncrono nas operações de:
 
-* PostgreSQL (banco de dados)
-* RabbitMQ (mensageria)
+- CRUD de usuários  
+- Criação, atualização e exclusão de diários  
 
-A aplicação **não é containerizada neste momento** e deve ser executada localmente.
+---
 
-```yaml id="o6n41f"
-version: "3"
+## Infraestrutura com Docker
+
+A aplicação é containerizada utilizando Docker, com separação entre:
+
+- API (FastAPI)  
+- Worker (processamento assíncrono)  
+- PostgreSQL  
+- RabbitMQ  
+
+```yaml
+version: "3.9"
 
 services:
   postgres:
     image: postgres:18-alpine
+    container_name: pokeDiary_postgres
     ports:
       - "5432:5432"
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: pokeDiary_rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-```
 
-📌 **Observação:** futuramente será adicionado suporte à containerização da aplicação com Docker.
+  api:
+    build: .
+    container_name: pokeDiary_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - rabbitmq
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    restart: always
+
+  worker:
+    build: .
+    container_name: pokeDiary_worker
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - rabbitmq
+    command: python rabbit_worker.py
+    restart: always
+
+volumes:
+  postgres_data:
+```
 
 ---
 
-## 🔑 Variáveis de Ambiente
+## Variáveis de Ambiente
 
-Exemplo de configuração (`.env`):
+Exemplo de configuração:
 
-```env id="0h6c7x"
-DATABASE_URL="postgresql://user:password@localhost:5432/postgres"
+```env
+DATABASE_URL="postgresql://user:password@postgres:5432/postgres"
 SECRET_KEY="your_secret_key"
 
 POSTGRES_USER="your_user"
@@ -137,67 +163,64 @@ RABBITMQ_PASSWORD="your_password"
 POKEMON_API_URL="https://pokeapi.co/api/v2/pokemon"
 ```
 
-⚠️ **Importante:** Nunca versionar o arquivo `.env`. Utilize um `.env.example`.
+⚠️ **Importante:** O arquivo `.env` não deve ser versionado. Utilize o `.env.example` como base.
 
 ---
 
-## ▶️ Como Executar o Projeto
+## Como Executar o Projeto
 
 ### 1. Clonar o repositório
 
-```bash id="78d1aq"
+```bash
 git clone https://github.com/seu-usuario/pokeDiary.git
 cd pokeDiary
 ```
 
-### 2. Subir os serviços (infraestrutura)
+### 2. Configurar variáveis de ambiente
 
-```bash id="td1ps9"
-docker-compose up -d
+```bash
+cp .env.example .env
 ```
 
-### 3. Instalar dependências
+### 3. Subir a aplicação
 
-```bash id="g8gt2m"
-pip install -r requirements.txt
-```
-
-### 4. Rodar a API
-
-```bash id="q1sl2g"
-python main.py
-```
-
-### 5. Rodar o worker do RabbitMQ
-
-```bash id="m2s0tt"
-python rabbit_worker.py
+```bash
+make up-d
 ```
 
 ---
 
-## 📌 Melhorias Futuras
+## Comandos disponíveis
 
-* [ ] Dockerfile para a aplicação
-* [ ] Pipeline CI/CD com Jenkins
-* [ ] Makefile para automação
-* [ ] Testes automatizados
-* [ ] Deploy em cloud
+```bash
+make up-d      # sobe todos os serviços
+make down      # para os containers
+make logs      # exibe logs
+make rebuild   # recria ambiente do zero
+```
 
 ---
 
-## 📚 Objetivo
+## Melhorias Futuras
+
+- Pipeline CI/CD com Jenkins  
+- Testes automatizados  
+- Deploy em cloud (AWS)  
+- Monitoramento e observabilidade  
+
+---
+
+## Objetivo
 
 Este projeto foi desenvolvido com foco em:
 
-* Prática de arquitetura backend
-* Integração com APIs externas
-* Uso de mensageria com RabbitMQ
-* Organização de código em camadas
-* Aplicação de princípios de Clean Architecture
+- Arquitetura backend moderna  
+- Integração com APIs externas  
+- Processamento assíncrono com filas  
+- Boas práticas de organização de código  
 
 ---
 
-## 👨‍💻 Autor
+## Autor
 
-Desenvolvido por **Deryck Henrique**
+Desenvolvido por **Deryck Henrique Albuquerque**
