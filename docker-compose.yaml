@@ -30,6 +30,8 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      RUN_MIGRATIONS: "true"
     depends_on:
       - postgres
       - rabbitmq
@@ -41,6 +43,8 @@ services:
     container_name: pokeDiary_worker
     env_file:
       - .env
+    environment:
+      RUN_MIGRATIONS: "false"
     depends_on:
       - postgres
       - rabbitmq
