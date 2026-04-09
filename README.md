@@ -43,6 +43,8 @@ pokeDiary/
 │   ├── connection_db.py  # Conexão com banco de dados
 │   └── security.py       # Configuração de autenticação e segurança
 │
+├── messaging/       # Integração com RabbitMQ (producers/consumers)
+│
 ├── model/          # Modelos de domínio (User, Diary)
 ├── Prisma/          # Schema e client Prisma
 ├── repository/    # Acesso aos dados (camada de persistência)
@@ -62,13 +64,14 @@ pokeDiary/
 - **Config**: banco e segurança  
 - **Core**: definições centrais (RBAC)  
 - **Dependencies**: injeção de dependências  
+- **Messaging**: comunicação assíncrona com RabbitMQ  
 
 ---
 
 ## Autenticação e Autorização
 
 - Autenticação baseada em **JWT (JSON Web Token)**  
-- Controle de acesso utilizando RBAC (Role-Based Access Control)  
+- Controle de acesso utilizando **RBAC (Role-Based Access Control)**  
 
 ---
 
@@ -89,6 +92,11 @@ A aplicação é containerizada utilizando Docker, com separação entre:
 - Worker (processamento assíncrono)  
 - PostgreSQL  
 - RabbitMQ  
+
+Além disso, o projeto utiliza um **entrypoint customizado** para:
+
+- Executar `prisma generate`
+- Aplicar migrations automaticamente com `prisma migrate deploy`
 
 ```yaml
 version: "3.9"
@@ -123,6 +131,8 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      RUN_MIGRATIONS: "true"
     depends_on:
       - postgres
       - rabbitmq
@@ -134,6 +144,8 @@ services:
     container_name: pokeDiary_worker
     env_file:
       - .env
+    environment:
+      RUN_MIGRATIONS: "false"
     depends_on:
       - postgres
       - rabbitmq
@@ -198,6 +210,17 @@ make down      # para os containers
 make logs      # exibe logs
 make rebuild   # recria ambiente do zero
 ```
+
+---
+
+## Observações
+
+- O projeto utiliza **Prisma ORM com migrations automatizadas via Docker**
+- O arquivo `entrypoint.sh` executa automaticamente:
+  - `prisma generate`
+  - `prisma migrate deploy`
+- Scripts `.sh` utilizam padrão **LF (Unix)** para compatibilidade com Docker/Linux
+- O repositório utiliza `.gitattributes` para garantir padronização de line endings
 
 ---
 
