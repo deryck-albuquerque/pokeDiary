@@ -6,14 +6,22 @@ API desenvolvida com **FastAPI** para criação de um diário de Pokémons, cons
 
 ## Sobre o Projeto
 
-O **pokeDiary** é um projeto de estudo focado em boas práticas de desenvolvimento backend, arquitetura de APIs e integração com serviços externos.
+O **pokeDiary** é um projeto backend estruturado com foco em **boas práticas de engenharia de software**, arquitetura escalável e integração entre múltiplos serviços.
+
+Mais do que um projeto funcional, ele foi desenvolvido como uma **base sólida para demonstrar domínio técnico** em:
+
+- Desenvolvimento de APIs modernas  
+- Arquitetura em camadas (Clean Architecture)  
+- Integração com mensageria  
+- Containerização e orquestração  
+- Pipeline de CI/CD  
 
 A aplicação permite que usuários:
 
 - Criem e gerenciem suas contas  
 - Registrem Pokémons em um diário personalizado  
 - Consultem informações detalhadas consumidas da PokéAPI  
-- Atualizem e removam registros do diário  
+- Atualizem e removam registros do diário   
 
 ---
 
@@ -24,13 +32,19 @@ A aplicação permite que usuários:
 - PostgreSQL  
 - Prisma ORM  
 - RabbitMQ (processamento assíncrono)  
-- Docker e Docker Compose  
+- Docker e Docker Compose
+- Jenkins (CI/CD) 
 
 ---
 
 ## Arquitetura do Projeto
 
-O projeto segue uma arquitetura em camadas baseada em princípios de **Clean Architecture**, garantindo separação de responsabilidades, baixo acoplamento e facilidade de manutenção.
+O projeto segue uma arquitetura baseada em **Clean Architecture**, promovendo:
+
+- Separação de responsabilidades  
+- Baixo acoplamento  
+- Alta coesão  
+- Facilidade de manutenção e evolução
 
 ```bash
 pokeDiary/
@@ -77,10 +91,11 @@ pokeDiary/
 
 ## Mensageria
 
-O projeto utiliza RabbitMQ para processamento assíncrono nas operações de:
+O projeto utiliza **RabbitMQ** para processamento assíncrono nas operações de:
 
 - CRUD de usuários  
-- Criação, atualização e exclusão de diários  
+- Criação e gerenciamento de diários
+- Processos desacoplados da API principal
 
 ---
 
@@ -93,10 +108,7 @@ A aplicação é containerizada utilizando Docker, com separação entre:
 - PostgreSQL  
 - RabbitMQ  
 
-Além disso, o projeto utiliza um **entrypoint customizado** para:
-
-- Executar `prisma generate`
-- Aplicar migrations automaticamente com `prisma migrate deploy`
+O ambiente é orquestrado via **Docker Compose**, garantindo consistência entre desenvolvimento e CI.
 
 ```yaml
 version: "3.9"
@@ -156,6 +168,36 @@ volumes:
   postgres_data:
 ```
 
+Além disso, o projeto utiliza um **entrypoint customizado** para:
+
+- Executar `prisma generate`
+- Aplicar migrations automaticamente com `prisma migrate deploy`
+
+---
+
+## CI/CD com Jenkins
+
+O projeto possui pipeline de integração contínua utilizando Jenkins, com:
+
+- Build automatizado com Docker
+- Subida dos serviços via Docker Compose
+- Injeção segura de variáveis via credentials
+- Geração dinâmica de .env
+- Healthcheck da API
+- Logs automáticos em caso de falha
+- Cleanup completo do ambiente após execução
+
+---
+
+## Etapas do Pipeline
+
+- Checkout do código
+- Criação dinâmica de variáveis de ambiente
+- Build das imagens Docker
+- Subida dos serviços
+- Verificação de disponibilidade da API
+- Finalização e limpeza do ambiente
+
 ---
 
 ## Variáveis de Ambiente
@@ -175,7 +217,7 @@ RABBITMQ_PASSWORD="your_password"
 POKEMON_API_URL="https://pokeapi.co/api/v2/pokemon"
 ```
 
-⚠️ **Importante:** O arquivo `.env` não deve ser versionado. Utilize o `.env.example` como base.
+⚠️ **Importante:** O arquivo `.env` não deve ser versionado. Utilize o `.env.example` como base e, em ambiente CI/CD, utilize ***injeção via Jenkins credentials***.
 
 ---
 
@@ -226,21 +268,23 @@ make rebuild   # recria ambiente do zero
 
 ## Melhorias Futuras
 
-- Pipeline CI/CD com Jenkins  
-- Testes automatizados  
-- Deploy em cloud (AWS)  
-- Monitoramento e observabilidade  
+- Testes automatizados (unitários e integração)
+- Coverage e quality gates
+- Deploy automatizado (AWS)
+- Observabilidade (logs estruturados + métricas)
+- Pipeline CD (entrega contínua) 
 
 ---
 
 ## Objetivo
 
-Este projeto foi desenvolvido com foco em:
+Este projeto foi desenvolvido como uma **base profissional para demonstrar domínio técnico**, cobrindo:
 
-- Arquitetura backend moderna  
-- Integração com APIs externas  
-- Processamento assíncrono com filas  
-- Boas práticas de organização de código  
+- Arquitetura backend moderna
+- Integração com serviços externos
+- Processamento assíncrono
+- Containerização e CI/CD
+- Boas práticas de engenharia de software 
 
 ---
 
