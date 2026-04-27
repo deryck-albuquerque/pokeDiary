@@ -60,7 +60,7 @@ pokeDiary/
 ├── messaging/       # Integração com RabbitMQ (producers/consumers)
 │
 ├── model/          # Modelos de domínio (User, Diary)
-├── Prisma/          # Schema e client Prisma
+├── prisma/          # Schema e client prisma
 ├── repository/    # Acesso aos dados (camada de persistência)
 ├── services/        # Regras de negócio
 ├── schemas/         # Schemas (validação e resposta)
