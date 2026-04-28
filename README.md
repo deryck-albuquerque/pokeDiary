@@ -8,7 +8,7 @@ API desenvolvida com **FastAPI** para criação de um diário de Pokémons, cons
 
 O **pokeDiary** é um projeto backend estruturado com foco em **boas práticas de engenharia de software**, arquitetura escalável e integração entre múltiplos serviços.
 
-Mais do que um projeto funcional, ele foi desenvolvido como uma **base sólida para demonstrar domínio técnico** em:
+Mais do que um projeto funcional, foi desenvolvido como uma base sólida para demonstrar domínio técnico em alguns pontos essenciais:
 
 - Desenvolvimento de APIs modernas  
 - Arquitetura em camadas (Clean Architecture)  
@@ -33,7 +33,9 @@ A aplicação permite que usuários:
 - Prisma ORM  
 - RabbitMQ (processamento assíncrono)  
 - Docker e Docker Compose
-- Jenkins (CI/CD) 
+- Jenkins (CI/CD)
+- AWS EC2  
+- Nginx 
 
 ---
 
@@ -49,7 +51,7 @@ O projeto segue uma arquitetura baseada em **Clean Architecture**, promovendo:
 ```bash
 pokeDiary/
 │
-├── controller/     # Rotas da API (camada de entrada)
+├── controller/      # Rotas da API (camada de entrada)
 ├── core/            # Definições centrais (ex: roles de usuário)
 ├── dependencies/    # Injeções de dependência (auth, etc)
 │
@@ -59,9 +61,9 @@ pokeDiary/
 │
 ├── messaging/       # Integração com RabbitMQ (producers/consumers)
 │
-├── model/          # Modelos de domínio (User, Diary)
+├── model/           # Modelos de domínio (User, Diary)
 ├── prisma/          # Schema e client prisma
-├── repository/    # Acesso aos dados (camada de persistência)
+├── repository/      # Acesso aos dados (camada de persistência)
 ├── services/        # Regras de negócio
 ├── schemas/         # Schemas (validação e resposta)
 │
@@ -106,7 +108,8 @@ A aplicação é containerizada utilizando Docker, com separação entre:
 - API (FastAPI)  
 - Worker (processamento assíncrono)  
 - PostgreSQL  
-- RabbitMQ  
+- RabbitMQ
+- Nginx (reverse proxy e entrada da aplicação)
 
 O ambiente é orquestrado via **Docker Compose**, garantindo consistência entre desenvolvimento e CI.
 
@@ -115,7 +118,7 @@ version: "3.9"
 
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:15-alpine
     container_name: pokeDiary_postgres
     ports:
       - "5432:5432"
@@ -125,6 +128,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -139,8 +147,6 @@ services:
   api:
     build: .
     container_name: pokeDiary_api
-    ports:
-      - "8000:8000"
     env_file:
       - .env
     environment:
@@ -164,6 +170,16 @@ services:
     command: python rabbit_worker.py
     restart: always
 
+  nginx:
+    image: nginx:latest
+    container_name: pokeDiary_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
 ```
@@ -172,6 +188,67 @@ Além disso, o projeto utiliza um **entrypoint customizado** para:
 
 - Executar `prisma generate`
 - Aplicar migrations automaticamente com `prisma migrate deploy`
+
+---
+
+## Deploy em Cloud (AWS EC2 + Nginx)
+
+A aplicação está implantada em ambiente cloud utilizando AWS, simulando um cenário real de produção.
+
+## Infraestrutura 
+
+- Instância EC2 (Linux)
+- Containers Docker
+- Reverse proxy com Nginx
+- Exposição pública via HTTP
+
+---
+
+## Arquitetura de Deploy
+
+***Cliente → Nginx → API (FastAPI) → Banco de dados e mensageria***
+
+---
+
+## Reverse Proxy com Nginx
+
+O Nginx atua como reverse proxy, trazendo:
+
+- Controle de entrada de requisições
+- Abstração da porta interna
+- Preparação para HTTPS
+- Base para escalabilidade futura
+
+---
+
+## Segurança
+
+- Security Groups da AWS
+- Portas liberadas:
+   - 80 (HTTP)
+   - 22 (SSH)
+
+---
+
+## Infraestrutura e Execução
+
+- Banco e mensageria não são expostos externamente
+- Containers isolados por serviço
+- Instância EC2 pode ser iniciada/parada sob demanda para otimização de custos
+- Nginx como reverse proxy desacoplado da aplicação
+
+---
+
+## Processamento Assíncrono e Evolução Serverless
+
+Atualmente o projeto utiliza RabbitMQ com worker dedicado.
+
+A arquitetura permite evolução para:
+
+- AWS Lambda
+- Execução sob demanda
+- Escalabilidade automática
+- Redução de custos
 
 ---
 
@@ -255,7 +332,7 @@ make rebuild   # recria ambiente do zero
 
 ---
 
-## Observações
+## Detalhes Técnicos da Aplicação
 
 - O projeto utiliza **Prisma ORM com migrations automatizadas via Docker**
 - O arquivo `entrypoint.sh` executa automaticamente:
@@ -266,13 +343,23 @@ make rebuild   # recria ambiente do zero
 
 ---
 
+## Demonstração da API
+
+A aplicação está implantada em ambiente AWS EC2 e pode ser acessada publicamente.
+
+> A instância é iniciada sob demanda para otimização de custos, portanto o endpoint não permanece ativo continuamente.
+
+***Para visualizar o sistema em execução (Swagger + endpoints), entre em contato.*** :)
+
+---
+
 ## Melhorias Futuras
 
-- Testes automatizados (unitários e integração)
-- Coverage e quality gates
-- Deploy automatizado (AWS)
-- Observabilidade (logs estruturados + métricas)
-- Pipeline CD (entrega contínua) 
+- Testes automatizados
+- Observabilidade
+- HTTPS com domínio próprio
+- Deploy automatizado
+- Pipeline CD
 
 ---
 
@@ -284,7 +371,8 @@ Este projeto foi desenvolvido como uma **base profissional para demonstrar domí
 - Integração com serviços externos
 - Processamento assíncrono
 - Containerização e CI/CD
-- Boas práticas de engenharia de software 
+- Boas práticas de engenharia de software
+- Deploy em cloud (AWS)
 
 ---
 
