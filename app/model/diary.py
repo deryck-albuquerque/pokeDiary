@@ -22,6 +22,3 @@ class PokemonDiaryResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     user_id: int
-
-    class Config:
-        from_attributes = True
