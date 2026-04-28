@@ -19,6 +19,8 @@ RUN pip install prisma
 
 COPY . .
 
+RUN prisma generate --schema=app/prisma/schema.prisma
+
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8000

@@ -4,7 +4,7 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
   echo "Waiting for database..."
   sleep 5
 
-  echo "Running Prisma generate..."
+  echo "Generating Prisma client..."
   prisma generate --schema=app/prisma/schema.prisma
 
   echo "Applying database migrations..."
