@@ -21,6 +21,11 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: pokeDiary_rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -35,11 +40,10 @@ services:
       - .env
     environment:
       RUN_MIGRATIONS: "true"
+      RABBITMQ_HOST: rabbitmq
     depends_on:
       - postgres
       - rabbitmq
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
-    restart: always
 
   worker:
     build: .
@@ -48,8 +52,8 @@ services:
       - .env
     environment:
       RUN_MIGRATIONS: "false"
+      RABBITMQ_HOST: rabbitmq
     depends_on:
-      - postgres
       - rabbitmq
     command: python rabbit_worker.py
     restart: always
